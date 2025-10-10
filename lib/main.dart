@@ -164,14 +164,13 @@ class _RequestTableState extends State<RequestTable> {
               Checky(
                 isChecked:
                     settings.requestHasBody ?? settings.requestCanHaveBody,
-                onChanged:
-                    settings.requestHasBody == null
-                        ? null
-                        : (bool? value) {
-                          setState(() {
-                            settings.requestHasBody = value ?? true;
-                          });
-                        },
+                onChanged: settings.requestHasBody == null
+                    ? null
+                    : (bool? value) {
+                        setState(() {
+                          settings.requestHasBody = value ?? true;
+                        });
+                      },
               ),
               Checky(
                 isChecked: settings.responseHasBody,
@@ -191,14 +190,13 @@ class _RequestTableState extends State<RequestTable> {
               ),
               Checky(isChecked: settings.shouldRepeat, onChanged: null),
               TextButton(
-                onPressed:
-                    () => settings.action(
-                      logWriteln: widget._logWriteln,
-                      requestHasBody: settings.requestHasBody ?? false,
-                      responseHasBody: settings.responseHasBody,
-                      // TODO: wire this up to a text field.
-                      responseCode: 200,
-                    ),
+                onPressed: () => settings.action(
+                  logWriteln: widget._logWriteln,
+                  requestHasBody: settings.requestHasBody ?? false,
+                  responseHasBody: settings.responseHasBody,
+                  // TODO: wire this up to a text field.
+                  responseCode: 200,
+                ),
                 child: Text('Go'),
               ),
             ],
@@ -269,12 +267,11 @@ class Checky extends StatelessWidget {
   Widget build(BuildContext context) {
     return Checkbox(
       value: isChecked,
-      onChanged:
-          _onChanged == null
-              ? null
-              : (bool? value) {
-                _onChanged(value);
-              },
+      onChanged: _onChanged == null
+          ? null
+          : (bool? value) {
+              _onChanged(value);
+            },
     );
   }
 }
@@ -291,15 +288,14 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending GET...');
-    final request = await client.getUrl(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
-    logWriteln('Sent GET: $request');
+    logWriteln('Sending GET to $uri...');
+    final request = await client.getUrl(uri);
+    logWriteln('Sent GET.');
     // No body.
     final response = await request.done;
     logWriteln('Received GET response: $response');
@@ -312,15 +308,14 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending POST...');
-    final request = await client.postUrl(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
-    logWriteln('Sent POST: $request');
+    logWriteln('Sending POST to $uri...');
+    final request = await client.postUrl(uri);
+    logWriteln('Sent POST.');
     if (requestHasBody) {
       request.write('Request Body');
     }
@@ -335,20 +330,19 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending PUT...');
-    final request = await client.putUrl(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
-    logWriteln('Sent PUT: $request');
+    logWriteln('Sending PUT to $uri...');
+    final request = await client.putUrl(uri);
+    logWriteln('Sent PUT.');
     if (requestHasBody) {
       request.write('Request Body');
     }
     final response = await request.done;
-    logWriteln('Received POST response: $response');
+    logWriteln('Received PUT response: $response');
   }
 
   void delete({
@@ -358,15 +352,14 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending DELETE...');
-    final request = await client.deleteUrl(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
-    logWriteln('Sent DELETE: $request');
+    logWriteln('Sending DELETE to $uri...');
+    final request = await client.deleteUrl(uri);
+    logWriteln('Sent DELETE.');
     if (requestHasBody) {
       request.write('Request Body');
     }
@@ -382,15 +375,14 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending package:http GET...');
-    var response = await http.get(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
-    logWriteln('Received package:http GET response: $response');
+    logWriteln('Sending package:http GET to $uri...');
+    var response = await http.get(uri);
+    logWriteln('Received package:http GET response: ${response.body}');
   }
 
   void packageHttpPost({
@@ -400,16 +392,17 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
+    );
     logWriteln('Sending package:http POST...');
     var response = await http.post(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+      uri,
       body: requestHasBody ? {'name': 'doodle', 'color': 'blue'} : null,
     );
-    logWriteln('Received package:http POST response: $response');
+    logWriteln('Received package:http POST response: ${response.body}');
   }
 
   void packageHttpPostStreamed({
@@ -420,19 +413,16 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending streamed package:http POST...');
-    var request =
-        http.StreamedRequest(
-            'POST',
-            _computeUri(
-              responseHasBody: responseHasBody,
-              shouldComplete: shouldComplete,
-              responseCode: responseCode,
-            ),
-          )
-          ..contentLength = 20
-          ..sink.add([11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
-          ..sink.add([21, 22, 23, 24, 25, 26, 27, 28, 29, 30]);
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
+    );
+    logWriteln('Sending streamed package:http POST to $uri...');
+    var request = http.StreamedRequest('POST', uri)
+      ..contentLength = 20
+      ..sink.add([11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+      ..sink.add([21, 22, 23, 24, 25, 26, 27, 28, 29, 30]);
     request.sink.close();
     var response = await request.send();
 
@@ -446,22 +436,22 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending package:cupertino_http POST...');
-
-    final config =
-        URLSessionConfiguration.ephemeralSessionConfiguration()
-          ..cache = URLCache.withCapacity(memoryCapacity: 2 * 1024 * 1024)
-          ..httpAdditionalHeaders = {'User-Agent': 'Book Agent'};
-    final httpClient = CupertinoClient.fromSessionConfiguration(config);
-    final response = await httpClient.get(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
+    logWriteln('Sending package:cupertino_http POST to $uri...');
 
-    logWriteln('Received package:cupertino_http POST response: $response');
+    final config = URLSessionConfiguration.ephemeralSessionConfiguration()
+      ..cache = URLCache.withCapacity(memoryCapacity: 2 * 1024 * 1024)
+      ..httpAdditionalHeaders = {'User-Agent': 'Book Agent'};
+    final httpClient = CupertinoClient.fromSessionConfiguration(config);
+    final response = await httpClient.get(uri);
+
+    logWriteln(
+      'Received package:cupertino_http POST response: ${response.body}',
+    );
   }
 
   void dioGet({
@@ -471,16 +461,15 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending Dio GET...');
-    // No body.
-    final response = await _dio.getUri(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
     );
-    logWriteln('Recived Dio GET response: $response');
+    logWriteln('Sending Dio GET to $uri...');
+    // No body.
+    final response = await _dio.getUri(uri);
+    logWriteln('Recived Dio GET response; headers: ${response.headers}');
   }
 
   void dioPost({
@@ -490,13 +479,14 @@ class _HttpClient {
     required int responseCode,
     bool shouldComplete = true,
   }) async {
-    logWriteln('Sending Dio POST...');
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
+    );
+    logWriteln('Sending Dio POST to $uri...');
     final response = await _dio.postUri(
-      _computeUri(
-        responseHasBody: responseHasBody,
-        shouldComplete: shouldComplete,
-        responseCode: responseCode,
-      ),
+      uri,
       data: requestHasBody ? {'a': 'b', 'c': 'd'} : null,
     );
     logWriteln('Received Dio POST response: $response');
@@ -525,12 +515,20 @@ class _HttpServer {
   _HttpServer(this.server);
 
   static Future<_HttpServer> create() async {
-    final ioServer = await io.HttpServer.bind(
-      io.InternetAddress.loopbackIPv4,
-      8888,
-    );
+    print('Starting server on port 8888...');
+    final io.HttpServer ioServer;
+    try {
+      ioServer = await io.HttpServer.bind(
+        io.InternetAddress.loopbackIPv4,
+        8888,
+      );
+    } catch (e, st) {
+      print('Could not bind: $e\n$st');
+      rethrow;
+    }
     ioServer.listen((request) {
       final path = request.uri.path;
+      print('Received request at $path');
       final queryParameters = request.uri.queryParameters;
       final responseCode =
           int.tryParse(queryParameters['responseCode'] ?? '200') ?? 200;
@@ -539,9 +537,12 @@ class _HttpServer {
         request.response.write('response body');
       }
       if (path.contains('complete/')) {
+        print('Closing response...');
         request.response.close();
+        print('Closed response.');
       }
     });
+    print('Started server at ${ioServer.address}.');
     return _HttpServer(ioServer);
   }
 
