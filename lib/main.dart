@@ -149,8 +149,8 @@ class _RequestTableState extends State<RequestTable> {
           children: [
             Text('Type'),
             Text('Request body?'),
+            Text('Response code'),
             Text('Response body?'),
-            // TODO: status code?
             // TODO: streaming response?
             Text('Completes?'),
             Text('Repeats?'),
@@ -166,15 +166,23 @@ class _RequestTableState extends State<RequestTable> {
                     settings.requestHasBody ?? settings.requestCanHaveBody,
                 onChanged: settings.requestHasBody == null
                     ? null
-                    : (bool? value) {
+                    : (value) {
                         setState(() {
                           settings.requestHasBody = value ?? true;
                         });
                       },
               ),
+              TextFormField(
+                initialValue: '200',
+                onChanged: (value) {
+                  setState(() {
+                    settings.responseCode = int.tryParse(value) ?? 200;
+                  });
+                },
+              ),
               Checky(
                 isChecked: settings.responseHasBody,
-                onChanged: (bool? value) {
+                onChanged: (value) {
                   setState(() {
                     settings.responseHasBody = value ?? true;
                   });
@@ -182,7 +190,7 @@ class _RequestTableState extends State<RequestTable> {
               ),
               Checky(
                 isChecked: settings.shouldComplete,
-                onChanged: (bool? value) {
+                onChanged: (value) {
                   setState(() {
                     settings.shouldComplete = value ?? false;
                   });
@@ -193,9 +201,8 @@ class _RequestTableState extends State<RequestTable> {
                 onPressed: () => settings.action(
                   logWriteln: widget._logWriteln,
                   requestHasBody: settings.requestHasBody ?? false,
+                  responseCode: settings.responseCode,
                   responseHasBody: settings.responseHasBody,
-                  // TODO: wire this up to a text field.
-                  responseCode: 200,
                 ),
                 child: Text('Go'),
               ),
@@ -211,8 +218,8 @@ class _RequestSettings {
   final void Function({
     required Logger logWriteln,
     required bool requestHasBody,
-    required bool responseHasBody,
     required int responseCode,
+    required bool responseHasBody,
     bool shouldComplete,
   })
   action;
@@ -220,6 +227,7 @@ class _RequestSettings {
   /// `null` means disabled.
   bool? requestHasBody;
   bool requestCanHaveBody;
+  int responseCode = 200;
   bool responseHasBody = true;
   bool shouldComplete = true;
   bool shouldRepeat = false;
