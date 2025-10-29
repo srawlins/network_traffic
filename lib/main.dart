@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' as io;
 
 import 'package:cupertino_http/cupertino_http.dart';
@@ -95,6 +96,16 @@ class RequestTable extends StatefulWidget {
 }
 
 class _RequestTableState extends State<RequestTable> {
+  final _repeatingTimers = <_RequestSettings, Timer>{};
+
+  @override
+  void dispose() {
+    for (final timer in _repeatingTimers.values) {
+      timer.cancel();
+    }
+    super.dispose();
+  }
+
   List<_RequestSettings> settingsList = [
     _RequestSettings(
       type: _RequestType.httpGet,
@@ -196,15 +207,55 @@ class _RequestTableState extends State<RequestTable> {
                   });
                 },
               ),
-              Checky(isChecked: settings.shouldRepeat, onChanged: null),
+              Checky(
+                isChecked: settings.shouldRepeat,
+                onChanged: (value) {
+                  setState(() {
+                    settings.shouldRepeat = value ?? false;
+                  });
+                },
+              ),
               TextButton(
-                onPressed: () => settings.action(
-                  logWriteln: widget._logWriteln,
-                  requestHasBody: settings.requestHasBody ?? false,
-                  responseCode: settings.responseCode,
-                  responseHasBody: settings.responseHasBody,
-                ),
-                child: Text('Go'),
+                onPressed: () {
+                  if (settings.shouldRepeat) {
+                    if (_repeatingTimers.containsKey(settings)) {
+                      // Stop the timer.
+                      _repeatingTimers[settings]!.cancel();
+                      setState(() {
+                        _repeatingTimers.remove(settings);
+                      });
+                    } else {
+                      // Start the timer.
+                      final timer = Timer.periodic(const Duration(seconds: 1), (
+                        timer,
+                      ) {
+                        settings.action(
+                          logWriteln: widget._logWriteln,
+                          requestHasBody: settings.requestHasBody ?? false,
+                          responseCode: settings.responseCode,
+                          responseHasBody: settings.responseHasBody,
+                          shouldComplete: settings.shouldComplete,
+                        );
+                      });
+                      setState(() {
+                        _repeatingTimers[settings] = timer;
+                      });
+                    }
+                  } else {
+                    // Just run once.
+                    settings.action(
+                      logWriteln: widget._logWriteln,
+                      requestHasBody: settings.requestHasBody ?? false,
+                      responseCode: settings.responseCode,
+                      responseHasBody: settings.responseHasBody,
+                      shouldComplete: settings.shouldComplete,
+                    );
+                  }
+                },
+                child:
+                    Text(settings.shouldRepeat
+                        ? (_repeatingTimers.containsKey(settings) ? 'Stop' : 'Start')
+                        : 'Go'),
               ),
             ],
           ),
