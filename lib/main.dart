@@ -252,10 +252,13 @@ class _RequestTableState extends State<RequestTable> {
                     );
                   }
                 },
-                child:
-                    Text(settings.shouldRepeat
-                        ? (_repeatingTimers.containsKey(settings) ? 'Stop' : 'Start')
-                        : 'Go'),
+                child: Text(
+                  settings.shouldRepeat
+                      ? (_repeatingTimers.containsKey(settings)
+                            ? 'Stop'
+                            : 'Start')
+                      : 'Go',
+                ),
               ),
             ],
           ),
@@ -355,8 +358,7 @@ class _HttpClient {
     logWriteln('Sending GET to $uri...');
     final request = await client.getUrl(uri);
     logWriteln('Sent GET.');
-    // No body.
-    final response = await request.done;
+    final response = await request.close();
     logWriteln('Received GET response: $response');
   }
 
@@ -378,7 +380,7 @@ class _HttpClient {
     if (requestHasBody) {
       request.write('Request Body');
     }
-    final response = await request.done;
+    final response = await request.close();
     logWriteln('Received POST response: $response');
   }
 
@@ -400,7 +402,7 @@ class _HttpClient {
     if (requestHasBody) {
       request.write('Request Body');
     }
-    final response = await request.done;
+    final response = await request.close();
     logWriteln('Received PUT response: $response');
   }
 
@@ -422,7 +424,7 @@ class _HttpClient {
     if (requestHasBody) {
       request.write('Request Body');
     }
-    final response = await request.done;
+    final response = await request.close();
     logWriteln('Received DELETE response: $response');
   }
 
@@ -587,7 +589,7 @@ class _HttpServer {
     }
     ioServer.listen((request) {
       final path = request.uri.path;
-      print('Received request at $path');
+      print('Received ${request.method} request at $path');
       final queryParameters = request.uri.queryParameters;
       final responseCode =
           int.tryParse(queryParameters['responseCode'] ?? '200') ?? 200;
