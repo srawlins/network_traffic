@@ -64,8 +64,14 @@ class _NetworkTrafficPageState extends State<NetworkTrafficPage> {
       ),
       body: Column(
         children: [
-          Center(child: RequestTable(logWriteln: _logWriteln)),
           Expanded(
+            flex: 4,
+            child: SingleChildScrollView(
+              child: RequestTable(logWriteln: _logWriteln),
+            ),
+          ),
+          Expanded(
+            flex: 1,
             child: SingleChildScrollView(
               scrollDirection: Axis.vertical,
               controller: _logScrollController,
