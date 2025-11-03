@@ -141,6 +141,10 @@ class _RequestTableState extends State<RequestTable> {
       requestHasBody: null,
       requestCanHaveBody: true,
     ),
+    _RequestSettings(
+      type: _RequestType.packageHttpDelete,
+      action: _client.packageHttpDelete,
+    ),
     if (io.Platform.isIOS || io.Platform.isMacOS)
       _RequestSettings(
         type: _RequestType.cupertinoHttpPost,
@@ -308,6 +312,7 @@ enum _RequestType {
   packageHttpGet('package:http (IOClient) GET'),
   packageHttpPost('package:http (IOClient) POST'),
   packageHttpPostStreamed('package:http (IOClient) POST (streamed)'),
+  packageHttpDelete('package:http (IOClient) DELETE'),
   cupertinoHttpPost('package:cupertino_http POST'),
   dioGet('Dio GET'),
   dioPost('Dio POST');
@@ -496,6 +501,26 @@ class _HttpClient {
     logWriteln('Received package:http POST response: $response');
   }
 
+  void packageHttpDelete({
+    required Logger logWriteln,
+    required bool requestHasBody,
+    required bool responseHasBody,
+    required int responseCode,
+    bool shouldComplete = true,
+  }) async {
+    var uri = _computeUri(
+      responseHasBody: responseHasBody,
+      shouldComplete: shouldComplete,
+      responseCode: responseCode,
+    );
+    logWriteln('Sending package:http DELETE...');
+    var response = await http.delete(
+      uri,
+      body: requestHasBody ? {'name': 'doodle', 'color': 'blue'} : null,
+    );
+    logWriteln('Received package:http DELETE response: ${response.body}');
+  }
+
   void cupertinoHttpPost({
     required Logger logWriteln,
     required bool requestHasBody,
@@ -593,7 +618,7 @@ class _HttpServer {
       print('Could not bind: $e\n$st');
       rethrow;
     }
-    ioServer.listen((request) {
+    ioServer.listen((request) async {
       final path = request.uri.path;
       print('Received ${request.method} request at $path');
       final queryParameters = request.uri.queryParameters;
@@ -601,11 +626,17 @@ class _HttpServer {
           int.tryParse(queryParameters['responseCode'] ?? '200') ?? 200;
       request.response.statusCode = responseCode;
       if (path.contains('responseHasBody/')) {
-        request.response.write('response body');
+        request.response.headers.contentType = io.ContentType(
+          "application",
+          "json",
+          charset: "utf-8",
+        );
+        request.response.write('{"response body":7}');
+        await request.response.flush();
       }
       if (path.contains('complete/')) {
         print('Closing response...');
-        request.response.close();
+        await request.response.close();
         print('Closed response.');
       }
     });
